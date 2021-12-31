@@ -191,7 +191,7 @@ export const inputCheckBox = (args) => {
             isRequired && { required: `${label} is required` }
           )}
         />
-        <label className='form-check-label' htmlFor={name}>
+        <label className='form-check-label mt-1' htmlFor={name}>
           {label}
         </label>
       </div>
@@ -279,7 +279,7 @@ export const inputDate = (args) => {
   )
 }
 
-export const InputAutoCompleteSelect = (args) => {
+export const inputAutoCompleteSelect = (args) => {
   const { register, errors, name, data, label, isRequired = true } = args
 
   return (
@@ -300,7 +300,7 @@ export const InputAutoCompleteSelect = (args) => {
         <option value=''>-------------</option>
         {data &&
           data.map((d) => (
-            <option key={d._id} value={d._id}>
+            <option key={d._id} value={d.passport}>
               {d.name}
             </option>
           ))}

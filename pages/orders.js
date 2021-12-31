@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import Head from 'next/head'
-import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import withAuth from '../HOC/withAuth'
 import Message from '../components/Message'
@@ -12,13 +11,10 @@ import {
   FaPlus,
   FaTimesCircle,
   FaTrash,
-  FaBuilding,
-  FaAlignCenter,
 } from 'react-icons/fa'
 
-import useEmployees from './api/employees'
-import useDepartments from '../api/departments'
-import usePositions from '../api/positions'
+import useOrders from '../api/orders'
+import usePatients from '../api/patients'
 
 import { CSVLink } from 'react-csv'
 
@@ -26,7 +22,7 @@ import { confirmAlert } from 'react-confirm-alert'
 import { Confirm } from '../components/Confirm'
 import { useForm } from 'react-hook-form'
 import {
-  dynamicInputSelect,
+  inputAutoCompleteSelect,
   inputCheckBox,
   inputDate,
   inputEmail,
@@ -38,23 +34,22 @@ import { useQueryClient } from 'react-query'
 import Pagination from '../components/Pagination'
 import moment from 'moment'
 
-const LabRequest = () => {
+const Order = () => {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const { getEmployees, updateEmployee, addEmployee, deleteEmployee } =
-    useEmployees(page)
+  const { getOrders, updateOrder, addOrder, deleteOrder } = useOrders(page)
 
-  const { getDepartments } = useDepartments()
-  const { getPositions } = usePositions()
+  const { getPatients } = usePatients()
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      isActive: true,
+      isNew: true,
     },
   })
 
@@ -62,14 +57,13 @@ const LabRequest = () => {
 
   useEffect(() => {
     const refetch = async () => {
-      await queryClient.prefetchQuery('employees')
+      await queryClient.prefetchQuery('orders')
     }
     refetch()
   }, [page, queryClient])
 
-  const { data, isLoading, isError, error } = getEmployees
-  const { data: departmentData } = getDepartments
-  const { data: positionData } = getPositions
+  const { data, isLoading, isError, error } = getOrders
+  const { data: patientData } = getPatients
 
   const {
     isLoading: isLoadingUpdate,
@@ -77,7 +71,7 @@ const LabRequest = () => {
     error: errorUpdate,
     isSuccess: isSuccessUpdate,
     mutateAsync: updateMutateAsync,
-  } = updateEmployee
+  } = updateOrder
 
   const {
     isLoading: isLoadingDelete,
@@ -85,7 +79,7 @@ const LabRequest = () => {
     error: errorDelete,
     isSuccess: isSuccessDelete,
     mutateAsync: deleteMutateAsync,
-  } = deleteEmployee
+  } = deleteOrder
 
   const {
     isLoading: isLoadingAdd,
@@ -93,7 +87,7 @@ const LabRequest = () => {
     error: errorAdd,
     isSuccess: isSuccessAdd,
     mutateAsync: addMutateAsync,
-  } = addEmployee
+  } = addOrder
 
   const [id, setId] = useState(null)
   const [edit, setEdit] = useState(false)
@@ -113,11 +107,30 @@ const LabRequest = () => {
   }
 
   const submitHandler = async (data) => {
+    const existed = {
+      isCovid: data.isCovid,
+      isNew: data.isNew,
+      isPcr: data.isPcr,
+      passportNumber: data.passportNumber,
+    }
+    const newPatient = {
+      address: data.address,
+      dateOfBirth: data.dateOfBirth,
+      email: data.email,
+      gender: data.gender,
+      isCovid: data.isCovid,
+      isNew: data.isNew,
+      isPcr: data.isPcr,
+      mobile: data.mobile,
+      name: data.name,
+      passport: data.passport,
+    }
+
     edit
       ? updateMutateAsync({
           _id: id,
-          employeeId: data.employeeId,
-          employeeName: data.employeeName,
+          orderId: data.orderId,
+          orderName: data.orderName,
           email: data.email,
           mobile: data.mobile,
           gender: data.gender,
@@ -126,71 +139,73 @@ const LabRequest = () => {
           position: data.position,
           isActive: data.isActive,
         })
-      : addMutateAsync(data)
+      : !data.isNew
+      ? addMutateAsync(existed)
+      : addMutateAsync(newPatient)
   }
 
-  const editHandler = (employee) => {
-    setId(employee._id)
+  const editHandler = (order) => {
+    setId(order._id)
     setEdit(true)
-    setValue('employeeId', employee.employeeId)
-    setValue('employeeName', employee.employeeName)
-    setValue('email', employee.email)
-    setValue('mobile', employee.mobile)
-    setValue('gender', employee.gender)
-    setValue('contractDate', moment(employee.contractDate).format('YYYY-MM-DD'))
-    setValue('isActive', employee.isActive)
-    setValue('department', employee.department._id)
-    setValue('position', employee.position._id)
+    setValue('orderId', order.orderId)
+    setValue('orderName', order.orderName)
+    setValue('email', order.email)
+    setValue('mobile', order.mobile)
+    setValue('gender', order.gender)
+    setValue('contractDate', moment(order.contractDate).format('YYYY-MM-DD'))
+    setValue('isActive', order.isActive)
+    setValue('department', order.department._id)
+    setValue('position', order.position._id)
   }
 
-  const filterEmployee =
+  const filterOrder =
     data &&
     data.data.filter((d) =>
       search !== ''
-        ? d.employeeId.includes(search.trim()) ||
-          d.employeeName.toUpperCase().includes(search.trim())
+        ? d.patient.passport.toLowerCase().includes(search.trim()) ||
+          d.patient.email.toLowerCase().includes(search.trim())
         : d
     )
 
   return (
     <>
       <Head>
-        <title>Employee</title>
-        <meta property='og:title' content='Employee' key='title' />
+        <title>Order</title>
+        <meta property='og:title' content='Order' key='title' />
       </Head>
       {isSuccessUpdate && (
         <Message variant='success'>
-          Employee has been updated successfully.
+          Order has been updated successfully.
         </Message>
       )}
       {isErrorUpdate && <Message variant='danger'>{errorUpdate}</Message>}
       {isSuccessAdd && (
         <Message variant='success'>
-          Employee has been Created successfully.
+          Order has been Created successfully.
         </Message>
       )}
       {isErrorAdd && <Message variant='danger'>{errorAdd}</Message>}
       {isSuccessDelete && (
         <Message variant='success'>
-          Employee has been deleted successfully.
+          Order has been deleted successfully.
         </Message>
       )}
       {isErrorDelete && <Message variant='danger'>{errorDelete}</Message>}
 
       <div
         className='modal fade'
-        id='editEmployeeModal'
+        id='editOrderModal'
         data-bs-backdrop='static'
         data-bs-keyboard='false'
         tabIndex='-1'
-        aria-labelledby='editEmployeeModalLabel'
+        aria-labelledby='editOrderModalLabel'
         aria-hidden='true'
       >
         <div className='modal-dialog modal-lg'>
           <div className='modal-content modal-background'>
             <div className='modal-header'>
-              <h3 className='modal-title ' id='editEmployeeModalLabel'>
-                {edit ? 'Edit Employee' : 'Add Employee'}
+              <h3 className='modal-title ' id='editOrderModalLabel'>
+                {edit ? 'Edit Order' : 'Add Order'}
               </h3>
               <button
                 type='button'
@@ -216,90 +231,111 @@ const LabRequest = () => {
               ) : (
                 <form onSubmit={handleSubmit(submitHandler)}>
                   <div className='row'>
-                    <div className='col-md-6 col-12'>
-                      {inputText({
-                        register,
-                        label: 'Employee ID',
-                        errors,
-                        name: 'employeeId',
-                      })}
-                    </div>
-                    <div className='col-md-6 col-12'>
-                      {inputText({
-                        register,
-                        label: 'Employee Name',
-                        errors,
-                        name: 'employeeName',
-                      })}
-                    </div>
-
-                    <div className='col-md-6 col-12'>
-                      {inputEmail({
-                        register,
-                        label: 'Email',
-                        errors,
-                        name: 'email',
-                      })}
-                    </div>
-                    <div className='col-md-6 col-12'>
-                      {inputNumber({
-                        register,
-                        label: 'Mobile',
-                        errors,
-                        name: 'mobile',
-                      })}
-                    </div>
-                    <div className='col-md-6 col-12'>
-                      {staticInputSelect({
-                        register,
-                        label: 'Gender',
-                        data: [{ name: 'Male' }, { name: 'Female' }],
-                        errors,
-                        name: 'gender',
-                      })}
-                    </div>
-                    <div className='col-md-6 col-12'>
-                      {inputDate({
-                        register,
-                        label: 'Contract Date',
-                        errors,
-                        name: 'contractDate',
-                      })}
-                    </div>
-                    <div className='col-md-6 col-12'>
-                      {dynamicInputSelect({
-                        register,
-                        label: 'Department',
-                        data:
-                          departmentData &&
-                          departmentData.filter((d) => d.isActive),
-                        errors,
-                        name: 'department',
-                      })}
-                    </div>
-                    <div className='col-md-6 col-12'>
-                      {dynamicInputSelect({
-                        register,
-                        label: 'Position',
-                        data:
-                          positionData &&
-                          positionData.filter((pos) => pos.isActive),
-                        errors,
-                        name: 'position',
-                      })}
-                    </div>
-                  </div>
-                  <div className='row'>
-                    <div className='col'>
+                    <div className='col-12'>
                       {inputCheckBox({
                         register,
                         errors,
-                        label: 'isActive',
-                        name: 'isActive',
+                        label: 'is this a new patient?',
+                        name: 'isNew',
+                        isRequired: false,
+                      })}
+                    </div>
+                    {watch().isNew ? (
+                      <>
+                        <div className='col-md-6 col-12'>
+                          {inputText({
+                            register,
+                            label: 'Patient Name',
+                            errors,
+                            name: 'name',
+                          })}
+                        </div>
+                        <div className='col-md-6 col-12'>
+                          {inputDate({
+                            register,
+                            label: 'Date of Birth',
+                            errors,
+                            name: 'dateOfBirth',
+                          })}
+                        </div>
+
+                        <div className='col-md-6 col-12'>
+                          {inputNumber({
+                            register,
+                            label: 'Mobile Number',
+                            errors,
+                            name: 'mobile',
+                          })}
+                        </div>
+                        <div className='col-md-6 col-12'>
+                          {inputEmail({
+                            register,
+                            label: 'Email Address',
+                            errors,
+                            name: 'email',
+                          })}
+                        </div>
+
+                        <div className='col-md-6 col-12'>
+                          {inputText({
+                            register,
+                            label: 'Passport Number',
+                            errors,
+                            name: 'passport',
+                          })}
+                        </div>
+
+                        <div className='col-md-6 col-12'>
+                          {staticInputSelect({
+                            register,
+                            label: 'Gender',
+                            data: [{ name: 'Male' }, { name: 'Female' }],
+                            errors,
+                            name: 'gender',
+                          })}
+                        </div>
+                        <div className='col-md-6 col-12'>
+                          {inputText({
+                            register,
+                            label: 'Address',
+                            errors,
+                            name: 'address',
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      <div className='col-12'>
+                        {inputAutoCompleteSelect({
+                          register,
+                          label: 'Passport Number',
+                          data: patientData,
+                          errors,
+                          name: 'passportNumber',
+                        })}
+                      </div>
+                    )}
+
+                    <hr />
+                    <div className='col-12'>
+                      {inputCheckBox({
+                        register,
+                        errors,
+                        label: 'COVID-19',
+                        name: 'isCovid',
+                        isRequired: false,
+                      })}
+                    </div>
+                    <div className='col-12'>
+                      {inputCheckBox({
+                        register,
+                        errors,
+                        label: 'PCR SARS-Cov-2',
+                        name: 'isPcr',
                         isRequired: false,
                       })}
                     </div>
                   </div>
+
                   <div className='modal-footer'>
                     <button
                       type='button'
@@ -336,12 +372,12 @@ const LabRequest = () => {
             right: '20px',
           }}
           data-bs-toggle='modal'
-          data-bs-target='#editEmployeeModal'
+          data-bs-target='#editOrderModal'
         >
           <FaPlus className='mb-1' />
         </button>
 
-        <CSVLink data={data ? data.data : []} filename='employee.csv'>
+        <CSVLink data={data ? data.data : []} filename='order.csv'>
           <button
             className='btn btn-success position-fixed rounded-3 animate__bounceIn'
             style={{
@@ -356,7 +392,7 @@ const LabRequest = () => {
 
       <div className='row mt-3'>
         <div className='col-md-4 col-6 m-auto'>
-          <h3 className='fw-light font-monospace'>Employees</h3>
+          <h3 className='fw-light font-monospace'>Orders</h3>
         </div>
         <div className='col-md-4 col-6 m-auto'>
           <Pagination data={data} setPage={setPage} />
@@ -366,10 +402,10 @@ const LabRequest = () => {
           <input
             type='text'
             className='form-control py-2'
-            placeholder='Search by ID or Name'
+            placeholder='Search by Passport or Mobile Number'
             name='search'
             value={search}
-            onChange={(e) => setSearch(e.target.value.toUpperCase())}
+            onChange={(e) => setSearch(e.target.value.toLowerCase())}
             autoFocus
             required
           />
@@ -397,45 +433,45 @@ const LabRequest = () => {
               </caption>
               <thead>
                 <tr>
-                  <th>Emp. ID</th>
-                  <th>Emp. Name</th>
+                  <th>Patient ID</th>
+                  <th>P. Name</th>
                   <th>Mobile</th>
-                  <th>Department</th>
-                  <th>Status</th>
-                  <th>Active</th>
+                  <th>Passport</th>
+                  <th>Email</th>
+                  <th>Lab Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {data &&
-                  filterEmployee.map((employee) => (
-                    <tr key={employee._id}>
-                      <td>{employee.employeeId}</td>
-                      <td>{employee.employeeName}</td>
-                      <td>{employee.mobile}</td>
-                      <td>{employee.department.name}</td>
-                      <td>{employee.status}</td>
+                  filterOrder.map((order) => (
+                    <tr key={order._id}>
+                      <td>{order.patient.patientId}</td>
+                      <td>{order.patient.name}</td>
+                      <td>{order.patient.mobile}</td>
+                      <td>{order.patient.passport}</td>
+                      <td>{order.patient.email}</td>
                       <td>
-                        {employee.isActive ? (
+                        {order.isExamined ? (
                           <FaCheckCircle className='text-success mb-1' />
                         ) : (
                           <FaTimesCircle className='text-danger mb-1' />
                         )}
                       </td>
 
-                      <td className='btn-employee'>
+                      <td className='btn-order'>
                         <button
                           className='btn btn-primary btn-sm rounded-pill '
-                          onClick={() => editHandler(employee)}
+                          onClick={() => editHandler(order)}
                           data-bs-toggle='modal'
-                          data-bs-target='#editEmployeeModal'
+                          data-bs-target='#editOrderModal'
                         >
                           <FaPenAlt />
                         </button>
 
                         <button
                           className='btn btn-danger btn-sm rounded-pill mx-1'
-                          onClick={() => deleteHandler(employee._id)}
+                          onClick={() => deleteHandler(order._id)}
                           disabled={isLoadingDelete}
                         >
                           {isLoadingDelete ? (
@@ -446,20 +482,6 @@ const LabRequest = () => {
                             </span>
                           )}
                         </button>
-                        <Link
-                          href={`/employees/department-transfer/${employee._id}`}
-                        >
-                          <a className='btn btn-primary btn-sm rounded-pill'>
-                            <FaBuilding />
-                          </a>
-                        </Link>
-                        <Link
-                          href={`/employees/position-transfer/${employee._id}`}
-                        >
-                          <a className='btn btn-primary btn-sm rounded-pill mx-1'>
-                            <FaAlignCenter />
-                          </a>
-                        </Link>
                       </td>
                     </tr>
                   ))}
@@ -472,6 +494,6 @@ const LabRequest = () => {
   )
 }
 
-export default dynamic(() => Promise.resolve(withAuth(LabRequest)), {
+export default dynamic(() => Promise.resolve(withAuth(Order)), {
   ssr: false,
 })
