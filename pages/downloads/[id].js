@@ -168,7 +168,7 @@ const Downloads = () => {
                 ))}
             </tbody>
           </table>
-          <p>
+          <div>
             <h6 className='fw-bold'>Note:</h6>
             <ul>
               <li>
@@ -180,15 +180,15 @@ const Downloads = () => {
                 exposure to or infection with Covid-19.
               </li>
             </ul>
-          </p>
-          <p className='my-5'>
+          </div>
+          <div className='my-5'>
             <h6 className='fw-bold'>Reviewed/Signed Out:</h6>
             <span>
               Dr.Abdalla Abdi, Molecular Microbiology & Bio-medicine
             </span>{' '}
             <br />
             <span>Mr.Abdifitah Abdullahi Lab Scientist</span>
-          </p>
+          </div>
           <div className='row'>
             <div className='col-12 text-end'>
               <div className='btn-group'>
