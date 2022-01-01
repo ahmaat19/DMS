@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import User from './User'
 import Patient from './Patient'
+import LabOrder from './LabOrder'
 
 const labResultScheme = mongoose.Schema(
   {
@@ -9,19 +10,17 @@ const labResultScheme = mongoose.Schema(
       ref: Patient,
       required: true,
     },
-    labOrders: [
-      {
-        test: { type: String, required: true },
-        result: { type: String, required: true },
-      },
-    ],
-    isExamined: { type: Boolean, default: false },
+    labOrder: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: LabOrder,
+      required: true,
+    },
+    labOrders: [],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: User,
       required: true,
     },
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: User },
   },
   { timestamps: true }
 )

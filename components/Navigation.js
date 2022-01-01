@@ -87,38 +87,6 @@ const Navigation = () => {
                   data-bs-toggle='dropdown'
                   aria-expanded='false'
                 >
-                  <FaCogs className='mb-1' /> Setting
-                </a>
-                <ul
-                  className='dropdown-menu border-0'
-                  aria-labelledby='navbarDropdownMenuLink'
-                >
-                  {customLocalStorage() &&
-                    customLocalStorage().userAccessRoutes &&
-                    customLocalStorage().userAccessRoutes.route &&
-                    customLocalStorage().userAccessRoutes.route.map(
-                      (route) =>
-                        route.isActive &&
-                        route.menu === 'Setting' && (
-                          <li key={route._id}>
-                            <Link href={route.path}>
-                              <a className='dropdown-item'>{route.name}</a>
-                            </Link>
-                          </li>
-                        )
-                    )}
-                </ul>
-              </li>
-
-              <li className='nav-item dropdown'>
-                <a
-                  className='nav-link dropdown-toggle'
-                  href='#'
-                  id='navbarDropdownMenuLink'
-                  role='button'
-                  data-bs-toggle='dropdown'
-                  aria-expanded='false'
-                >
                   <FaCog className='mb-1' /> Admin
                 </a>
                 <ul

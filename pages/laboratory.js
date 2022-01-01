@@ -1,59 +1,39 @@
 import React, { useEffect, useState } from 'react'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import withAuth from '../../HOC/withAuth'
-import Message from '../../components/Message'
+import withAuth from '../HOC/withAuth'
+import Message from '../components/Message'
 import Loader from 'react-loader-spinner'
 import {
   FaCheckCircle,
   FaFileDownload,
-  FaPenAlt,
   FaPlus,
   FaTimesCircle,
-  FaTrash,
+  FaMicroscope,
 } from 'react-icons/fa'
 
-import usePositions from '../../api/positions'
+import useLaboratories from '../api/laboratories'
 
 import { CSVLink } from 'react-csv'
 
-import { confirmAlert } from 'react-confirm-alert'
-import { Confirm } from '../../components/Confirm'
 import { useForm } from 'react-hook-form'
-import { inputCheckBox, inputText } from '../../utils/dynamicForm'
+import { inputCheckBox } from '../utils/dynamicForm'
+import moment from 'moment'
 
-const Position = () => {
-  const { getPositions, updatePosition, addPosition, deletePosition } =
-    usePositions()
+const Laboratory = () => {
+  const [search, setSearch] = useState('')
+  const { getLaboratories, addLaboratory } = useLaboratories()
+
   const {
     register,
     handleSubmit,
-    setValue,
     reset,
     formState: { errors },
   } = useForm({
-    defaultValues: {
-      isActive: true,
-    },
+    defaultValues: {},
   })
 
-  const { data, isLoading, isError, error } = getPositions
-
-  const {
-    isLoading: isLoadingUpdate,
-    isError: isErrorUpdate,
-    error: errorUpdate,
-    isSuccess: isSuccessUpdate,
-    mutateAsync: updateMutateAsync,
-  } = updatePosition
-
-  const {
-    isLoading: isLoadingDelete,
-    isError: isErrorDelete,
-    error: errorDelete,
-    isSuccess: isSuccessDelete,
-    mutateAsync: deleteMutateAsync,
-  } = deletePosition
+  const { data, isLoading, isError, error, mutateAsync } = getLaboratories
 
   const {
     isLoading: isLoadingAdd,
@@ -61,83 +41,56 @@ const Position = () => {
     error: errorAdd,
     isSuccess: isSuccessAdd,
     mutateAsync: addMutateAsync,
-  } = addPosition
+  } = addLaboratory
 
-  const [id, setId] = useState(null)
-  const [edit, setEdit] = useState(false)
+  const [selected, setSelected] = useState(null)
 
   const formCleanHandler = () => {
-    setEdit(false)
     reset()
   }
 
   useEffect(() => {
-    if (isSuccessAdd || isSuccessUpdate) formCleanHandler()
+    if (isSuccessAdd) formCleanHandler()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuccessAdd, isSuccessUpdate])
-
-  const deleteHandler = (id) => {
-    confirmAlert(Confirm(() => deleteMutateAsync(id)))
-  }
+  }, [isSuccessAdd])
 
   const submitHandler = async (data) => {
-    edit
-      ? updateMutateAsync({
-          _id: id,
-          name: data.name,
-          isActive: data.isActive,
-        })
-      : addMutateAsync(data)
+    addMutateAsync({ newData: data, oldData: selected })
   }
 
-  const editHandler = (position) => {
-    setId(position._id)
-    setEdit(true)
-    setValue('name', position.name)
-    setValue('isActive', position.isActive)
+  const searchHandler = (e) => {
+    e.preventDefault()
+    mutateAsync(search)
   }
-
-  const toUpper = (str) => str.charAt(0).toUpperCase() + str.slice(1)
 
   return (
     <>
       <Head>
-        <title>Position</title>
-        <meta property='og:title' content='Position' key='title' />
+        <title>Laboratory</title>
+        <meta property='og:title' content='Laboratory' key='title' />
       </Head>
-      {isSuccessUpdate && (
-        <Message variant='success'>
-          Position has been updated successfully.
-        </Message>
-      )}
-      {isErrorUpdate && <Message variant='danger'>{errorUpdate}</Message>}
+
       {isSuccessAdd && (
         <Message variant='success'>
-          Position has been Created successfully.
+          Laboratory has been Created successfully.
         </Message>
       )}
       {isErrorAdd && <Message variant='danger'>{errorAdd}</Message>}
-      {isSuccessDelete && (
-        <Message variant='success'>
-          Position has been deleted successfully.
-        </Message>
-      )}
-      {isErrorDelete && <Message variant='danger'>{errorDelete}</Message>}
 
       <div
         className='modal fade'
-        id='editPositionModal'
+        id='editLaboratoryModal'
         data-bs-backdrop='static'
         data-bs-keyboard='false'
         tabIndex='-1'
-        aria-labelledby='editPositionModalLabel'
+        aria-labelledby='editLaboratoryModalLabel'
         aria-hidden='true'
       >
-        <div className='modal-dialog'>
+        <div className='modal-dialog modal-lg'>
           <div className='modal-content modal-background'>
             <div className='modal-header'>
-              <h3 className='modal-title ' id='editPositionModalLabel'>
-                {edit ? 'Edit Position' : 'Add Position'}
+              <h3 className='modal-title ' id='editLaboratoryModalLabel'>
+                Laboratory Entry Result
               </h3>
               <button
                 type='button'
@@ -162,17 +115,29 @@ const Position = () => {
                 <Message variant='danger'>{error}</Message>
               ) : (
                 <form onSubmit={handleSubmit(submitHandler)}>
-                  {inputText({ register, label: 'Name', errors, name: 'name' })}
                   <div className='row'>
-                    <div className='col'>
-                      {inputCheckBox({
-                        register,
-                        errors,
-                        label: 'isActive',
-                        name: 'isActive',
-                        isRequired: false,
-                      })}
-                    </div>
+                    {selected && selected.labOrders.includes('COVID-19') && (
+                      <div className='col-12'>
+                        {inputCheckBox({
+                          register,
+                          errors,
+                          label: 'COVID-19',
+                          name: 'isCovid',
+                          isRequired: false,
+                        })}
+                      </div>
+                    )}
+                    {selected && selected.labOrders.includes('PCR SARS-Cov-2') && (
+                      <div className='col-12'>
+                        {inputCheckBox({
+                          register,
+                          errors,
+                          label: 'PCR SARS-Cov-2',
+                          name: 'isPcr',
+                          isRequired: false,
+                        })}
+                      </div>
+                    )}
                   </div>
                   <div className='modal-footer'>
                     <button
@@ -186,9 +151,9 @@ const Position = () => {
                     <button
                       type='submit'
                       className='btn btn-primary '
-                      disabled={isLoadingAdd || isLoadingUpdate}
+                      disabled={isLoadingAdd}
                     >
-                      {isLoadingAdd || isLoadingUpdate ? (
+                      {isLoadingAdd ? (
                         <span className='spinner-border spinner-border-sm' />
                       ) : (
                         'Submit'
@@ -210,12 +175,12 @@ const Position = () => {
             right: '20px',
           }}
           data-bs-toggle='modal'
-          data-bs-target='#editPositionModal'
+          data-bs-target='#editLaboratoryModal'
         >
           <FaPlus className='mb-1' />
         </button>
 
-        <CSVLink data={data ? data : []} filename='position.csv'>
+        <CSVLink data={data ? data : []} filename='laboratory.csv'>
           <button
             className='btn btn-success position-fixed rounded-3 animate__bounceIn'
             style={{
@@ -230,7 +195,22 @@ const Position = () => {
 
       <div className='row mt-2'>
         <div className='col-md-4 col-6 me-auto'>
-          <h3 className='fw-light font-monospace'>Positions</h3>
+          <h3 className='fw-light font-monospace'>Laboratory</h3>
+        </div>
+
+        <div className='col-md-4 col-12 ms-auto'>
+          <form onSubmit={(e) => searchHandler(e)}>
+            <input
+              type='text'
+              className='form-control py-2'
+              placeholder='Search by Passport'
+              name='search'
+              value={search}
+              onChange={(e) => setSearch(e.target.value.toUpperCase())}
+              autoFocus
+              required
+            />
+          </form>
         </div>
       </div>
 
@@ -250,50 +230,46 @@ const Position = () => {
         <>
           <div className='table-responsive '>
             <table className='table table-sm hover bordered table-striped caption-top '>
-              <caption>{data && data.length} records were found</caption>
+              <caption>
+                {!isLoading && data && data.length} records were found
+              </caption>
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Active</th>
+                  <th>Patient ID</th>
+                  <th>P. Name</th>
+                  <th>Mobile</th>
+                  <th>Passport</th>
+                  <th>Request Date</th>
+                  <th>Lab Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
+                {console.log(data && data)}
                 {data &&
-                  data.map((position) => (
-                    <tr key={position._id}>
-                      <td>{toUpper(position.name)}</td>
+                  data.map((laboratory) => (
+                    <tr key={laboratory._id}>
+                      <td>{laboratory.patient.patientId}</td>
+                      <td>{laboratory.patient.name}</td>
+                      <td>{laboratory.patient.mobile}</td>
+                      <td>{laboratory.patient.passport}</td>
+                      <td>{moment(laboratory.createdAt).format('lll')}</td>
                       <td>
-                        {position.isActive ? (
+                        {laboratory.isExamined ? (
                           <FaCheckCircle className='text-success mb-1' />
                         ) : (
                           <FaTimesCircle className='text-danger mb-1' />
                         )}
                       </td>
 
-                      <td className='btn-position'>
+                      <td className='btn-laboratory'>
                         <button
                           className='btn btn-primary btn-sm rounded-pill '
-                          onClick={() => editHandler(position)}
+                          onClick={() => setSelected(laboratory)}
                           data-bs-toggle='modal'
-                          data-bs-target='#editPositionModal'
+                          data-bs-target='#editLaboratoryModal'
                         >
-                          <FaPenAlt />
-                        </button>
-
-                        <button
-                          className='btn btn-danger btn-sm rounded-pill ms-1'
-                          onClick={() => deleteHandler(position._id)}
-                          disabled={isLoadingDelete}
-                        >
-                          {isLoadingDelete ? (
-                            <span className='spinner-border spinner-border-sm' />
-                          ) : (
-                            <span>
-                              {' '}
-                              <FaTrash />
-                            </span>
-                          )}
+                          <FaMicroscope />
                         </button>
                       </td>
                     </tr>
@@ -307,6 +283,6 @@ const Position = () => {
   )
 }
 
-export default dynamic(() => Promise.resolve(withAuth(Position)), {
+export default dynamic(() => Promise.resolve(withAuth(Laboratory)), {
   ssr: false,
 })

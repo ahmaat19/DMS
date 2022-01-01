@@ -13,8 +13,9 @@ const patientScheme = mongoose.Schema(
     email: { type: String, lowercase: true },
     mobile: { type: Number, required: true },
     dateOfBirth: { type: Date },
-    passport: { type: String },
+    passport: { type: String, required: true },
     address: { type: String },
+    gender: { type: String, required: true },
 
     isActive: { type: Boolean, default: true },
     createdBy: {

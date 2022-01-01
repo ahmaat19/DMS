@@ -13,15 +13,6 @@ export default function useOrders(page) {
     { retry: 0 }
   )
 
-  // update orders
-  const updateOrder = useMutation(
-    async (obj) => await dynamicAPI('put', `${url}/${obj._id}`, obj),
-    {
-      retry: 0,
-      onSuccess: () => queryClient.invalidateQueries(['orders']),
-    }
-  )
-
   // delete orders
   const deleteOrder = useMutation(
     async (id) => await dynamicAPI('delete', `${url}/${id}`, {}),
@@ -42,7 +33,6 @@ export default function useOrders(page) {
 
   return {
     getOrders,
-    updateOrder,
     deleteOrder,
     addOrder,
   }

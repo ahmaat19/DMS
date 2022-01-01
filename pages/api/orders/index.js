@@ -58,7 +58,7 @@ handler.post(async (req, res) => {
   const createdBy = req.user.id
 
   if (isNew) {
-    const pExist = await Patient.findOne({ passport })
+    const pExist = await Patient.findOne({ passport: passport.toUpperCase() })
     if (pExist) return res.status(400).send('Patient already exist')
     const lastRecord = await Patient.findOne(
       {},
@@ -76,7 +76,7 @@ handler.post(async (req, res) => {
       mobile,
       patientId,
       name,
-      passport,
+      passport: passport.toUpperCase(),
       createdBy,
     })
     if (create) {
@@ -94,7 +94,9 @@ handler.post(async (req, res) => {
   }
 
   if (!isNew) {
-    const patientObj = await Patient.findOne({ passport: passportNumber })
+    const patientObj = await Patient.findOne({
+      passport: passportNumber.toUpperCase(),
+    })
     const isExamined = await LabOrder.findOne({
       isExamined: true,
       patient: patientObj._id,

@@ -7,7 +7,6 @@ import Loader from 'react-loader-spinner'
 import {
   FaCheckCircle,
   FaFileDownload,
-  FaPenAlt,
   FaPlus,
   FaTimesCircle,
   FaTrash,
@@ -32,18 +31,16 @@ import {
 } from '../utils/dynamicForm'
 import { useQueryClient } from 'react-query'
 import Pagination from '../components/Pagination'
-import moment from 'moment'
 
 const Order = () => {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const { getOrders, updateOrder, addOrder, deleteOrder } = useOrders(page)
+  const { getOrders, addOrder, deleteOrder } = useOrders(page)
 
   const { getPatients } = usePatients()
   const {
     register,
     handleSubmit,
-    setValue,
     watch,
     reset,
     formState: { errors },
@@ -66,14 +63,6 @@ const Order = () => {
   const { data: patientData } = getPatients
 
   const {
-    isLoading: isLoadingUpdate,
-    isError: isErrorUpdate,
-    error: errorUpdate,
-    isSuccess: isSuccessUpdate,
-    mutateAsync: updateMutateAsync,
-  } = updateOrder
-
-  const {
     isLoading: isLoadingDelete,
     isError: isErrorDelete,
     error: errorDelete,
@@ -89,18 +78,14 @@ const Order = () => {
     mutateAsync: addMutateAsync,
   } = addOrder
 
-  const [id, setId] = useState(null)
-  const [edit, setEdit] = useState(false)
-
   const formCleanHandler = () => {
-    setEdit(false)
     reset()
   }
 
   useEffect(() => {
-    if (isSuccessAdd || isSuccessUpdate) formCleanHandler()
+    if (isSuccessAdd) formCleanHandler()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuccessAdd, isSuccessUpdate])
+  }, [isSuccessAdd])
 
   const deleteHandler = (id) => {
     confirmAlert(Confirm(() => deleteMutateAsync(id)))
@@ -126,36 +111,7 @@ const Order = () => {
       passport: data.passport,
     }
 
-    edit
-      ? updateMutateAsync({
-          _id: id,
-          orderId: data.orderId,
-          orderName: data.orderName,
-          email: data.email,
-          mobile: data.mobile,
-          gender: data.gender,
-          contractDate: data.contractDate,
-          department: data.department,
-          position: data.position,
-          isActive: data.isActive,
-        })
-      : !data.isNew
-      ? addMutateAsync(existed)
-      : addMutateAsync(newPatient)
-  }
-
-  const editHandler = (order) => {
-    setId(order._id)
-    setEdit(true)
-    setValue('orderId', order.orderId)
-    setValue('orderName', order.orderName)
-    setValue('email', order.email)
-    setValue('mobile', order.mobile)
-    setValue('gender', order.gender)
-    setValue('contractDate', moment(order.contractDate).format('YYYY-MM-DD'))
-    setValue('isActive', order.isActive)
-    setValue('department', order.department._id)
-    setValue('position', order.position._id)
+    !data.isNew ? addMutateAsync(existed) : addMutateAsync(newPatient)
   }
 
   const filterOrder =
@@ -173,12 +129,7 @@ const Order = () => {
         <title>Order</title>
         <meta property='og:title' content='Order' key='title' />
       </Head>
-      {isSuccessUpdate && (
-        <Message variant='success'>
-          Order has been updated successfully.
-        </Message>
-      )}
-      {isErrorUpdate && <Message variant='danger'>{errorUpdate}</Message>}
+
       {isSuccessAdd && (
         <Message variant='success'>
           Order has been Created successfully.
@@ -205,7 +156,7 @@ const Order = () => {
           <div className='modal-content modal-background'>
             <div className='modal-header'>
               <h3 className='modal-title ' id='editOrderModalLabel'>
-                {edit ? 'Edit Order' : 'Add Order'}
+                Add New Order
               </h3>
               <button
                 type='button'
@@ -348,9 +299,9 @@ const Order = () => {
                     <button
                       type='submit'
                       className='btn btn-primary '
-                      disabled={isLoadingAdd || isLoadingUpdate}
+                      disabled={isLoadingAdd}
                     >
-                      {isLoadingAdd || isLoadingUpdate ? (
+                      {isLoadingAdd ? (
                         <span className='spinner-border spinner-border-sm' />
                       ) : (
                         'Submit'
@@ -390,7 +341,7 @@ const Order = () => {
         </CSVLink>
       </div>
 
-      <div className='row mt-3'>
+      <div className='row mt-2'>
         <div className='col-md-4 col-6 m-auto'>
           <h3 className='fw-light font-monospace'>Orders</h3>
         </div>
@@ -402,7 +353,7 @@ const Order = () => {
           <input
             type='text'
             className='form-control py-2'
-            placeholder='Search by Passport or Mobile Number'
+            placeholder='Search by Passport or Email'
             name='search'
             value={search}
             onChange={(e) => setSearch(e.target.value.toLowerCase())}
@@ -460,15 +411,6 @@ const Order = () => {
                       </td>
 
                       <td className='btn-order'>
-                        <button
-                          className='btn btn-primary btn-sm rounded-pill '
-                          onClick={() => editHandler(order)}
-                          data-bs-toggle='modal'
-                          data-bs-target='#editOrderModal'
-                        >
-                          <FaPenAlt />
-                        </button>
-
                         <button
                           className='btn btn-danger btn-sm rounded-pill mx-1'
                           onClick={() => deleteHandler(order._id)}
