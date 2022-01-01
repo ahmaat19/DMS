@@ -82,9 +82,9 @@ const Downloads = () => {
                 <h1 className='text-center display-3 fw-bold'>
                   DALADDA COVID-19
                 </h1>
-                <h6 className='text-center display-6 fw-light'>
+                <h3 className='text-center fw-light'>
                   UNION OF COVID-19 LAB.CORPS
-                </h6>
+                </h3>
               </div>
             </div>
             <div className='col-2 my-auto text-end'>
