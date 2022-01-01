@@ -66,8 +66,8 @@ const Laboratory = () => {
   return (
     <>
       <Head>
-        <title>Laboratory</title>
-        <meta property='og:title' content='Laboratory' key='title' />
+        <title>Laboratory Entry</title>
+        <meta property='og:title' content='Laboratory Entry' key='title' />
       </Head>
 
       {isSuccessAdd && (
@@ -245,7 +245,6 @@ const Laboratory = () => {
                 </tr>
               </thead>
               <tbody>
-                {console.log(data && data)}
                 {data &&
                   data.map((laboratory) => (
                     <tr key={laboratory._id}>

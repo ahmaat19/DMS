@@ -102,3 +102,9 @@ main {
 .text-primary {
   color: var(--primary-color) !important;
 }
+
+@page {
+  /* size: 80mm 50mm; */
+  margin: 500px !important;
+  background-color: transparent !important;
+}

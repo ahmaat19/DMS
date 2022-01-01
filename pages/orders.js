@@ -126,8 +126,12 @@ const Order = () => {
   return (
     <>
       <Head>
-        <title>Order</title>
-        <meta property='og:title' content='Order' key='title' />
+        <title>Laboratory Request Order</title>
+        <meta
+          property='og:title'
+          content='Laboratory Request Order'
+          key='title'
+        />
       </Head>
 
       {isSuccessAdd && (

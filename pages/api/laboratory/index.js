@@ -37,7 +37,6 @@ handler.post(async (req, res) => {
 
 handler.put(async (req, res) => {
   await dbConnect()
-  console.log(req.body)
   const { newData, oldData } = req.body
   const createdBy = req.user.id
 
@@ -82,15 +81,13 @@ handler.put(async (req, res) => {
         : labOrders.push({ isPcr: 'negative' })
     }
 
-    console.log(labOrders)
     await order.save()
-    const create = await LabResult.create({
+    await LabResult.create({
       labOrders,
       labOrder: order._id,
       patient: order.patient,
       createdBy,
     })
-    console.log(create)
   }
 
   res.status(201).json({ status: 'success' })

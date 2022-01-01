@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Head from 'next/head'
+import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import withAuth from '../HOC/withAuth'
 import Message from '../components/Message'
@@ -120,9 +121,11 @@ const Results = () => {
                       <td>{order.patient.email}</td>
 
                       <td className='btn-order'>
-                        <button className='btn btn-primary btn-sm rounded-pill mx-1'>
-                          <FaPrint />
-                        </button>
+                        <Link href={`/downloads/${order._id}`}>
+                          <a className='btn btn-primary btn-sm border-0 rounded-pill mx-1'>
+                            <FaPrint />
+                          </a>
+                        </Link>
                       </td>
                     </tr>
                   ))}
