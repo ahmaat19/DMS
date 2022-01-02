@@ -1,39 +1,58 @@
 import React, { useEffect, useState } from 'react'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import withAuth from '../HOC/withAuth'
-import Message from '../components/Message'
+import withAuth from '../../HOC/withAuth'
+import Message from '../../components/Message'
 import Loader from 'react-loader-spinner'
 import {
   FaCheckCircle,
   FaFileDownload,
+  FaPenAlt,
   FaPlus,
   FaTimesCircle,
-  FaMicroscope,
+  FaTrash,
 } from 'react-icons/fa'
 
-import useLaboratories from '../api/laboratories'
+import useTests from '../../api/tests'
 
 import { CSVLink } from 'react-csv'
 
+import { confirmAlert } from 'react-confirm-alert'
+import { Confirm } from '../../components/Confirm'
 import { useForm } from 'react-hook-form'
-import { inputCheckBox, inputMultipleCheckBox } from '../utils/dynamicForm'
-import moment from 'moment'
+import { inputCheckBox, inputNumber, inputText } from '../../utils/dynamicForm'
 
-const Laboratory = () => {
-  const [search, setSearch] = useState('')
-  const { getLaboratories, addLaboratory } = useLaboratories()
-
+const Test = () => {
+  const { getTests, updateTest, addTest, deleteTest } = useTests()
   const {
     register,
     handleSubmit,
+    setValue,
     reset,
     formState: { errors },
   } = useForm({
-    defaultValues: {},
+    defaultValues: {
+      isActive: true,
+    },
   })
 
-  const { data, isLoading, isError, error, mutateAsync } = getLaboratories
+  const { data, isLoading, isError, error } = getTests
+
+  const {
+    isLoading: isLoadingUpdate,
+    isError: isErrorUpdate,
+    error: errorUpdate,
+    isSuccess: isSuccessUpdate,
+    mutateAsync: updateMutateAsync,
+  } = updateTest
+
+  const {
+    isLoading: isLoadingDelete,
+    isError: isErrorDelete,
+    error: errorDelete,
+    isSuccess: isSuccessDelete,
+    mutateAsync: deleteMutateAsync,
+  } = deleteTest
 
   const {
     isLoading: isLoadingAdd,
@@ -41,56 +60,79 @@ const Laboratory = () => {
     error: errorAdd,
     isSuccess: isSuccessAdd,
     mutateAsync: addMutateAsync,
-  } = addLaboratory
+  } = addTest
 
-  const [selected, setSelected] = useState(null)
+  const [id, setId] = useState(null)
+  const [edit, setEdit] = useState(false)
 
   const formCleanHandler = () => {
+    setEdit(false)
     reset()
   }
 
   useEffect(() => {
-    if (isSuccessAdd) formCleanHandler()
+    if (isSuccessAdd || isSuccessUpdate) formCleanHandler()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuccessAdd])
+  }, [isSuccessAdd, isSuccessUpdate])
+
+  const deleteHandler = (id) => {
+    confirmAlert(Confirm(() => deleteMutateAsync(id)))
+  }
 
   const submitHandler = async (data) => {
-    addMutateAsync({ newData: data, oldData: selected })
+    edit
+      ? updateMutateAsync({
+          _id: id,
+          name: data.name,
+          rate: data.rate,
+          isActive: data.isActive,
+        })
+      : addMutateAsync(data)
   }
 
-  const searchHandler = (e) => {
-    e.preventDefault()
-    mutateAsync(search)
+  const editHandler = (test) => {
+    setId(test._id)
+    setEdit(true)
+    setValue('name', test.name)
+    setValue('rate', test.rate)
+    setValue('isActive', test.isActive)
   }
+
+  const toUpper = (str) => str.charAt(0).toUpperCase() + str.slice(1)
 
   return (
     <>
       <Head>
-        <title>Laboratory Entry</title>
-        <meta property='og:title' content='Laboratory Entry' key='title' />
+        <title>Test</title>
+        <meta property='og:title' content='Test' key='title' />
       </Head>
-
+      {isSuccessUpdate && (
+        <Message variant='success'>Test has been updated successfully.</Message>
+      )}
+      {isErrorUpdate && <Message variant='danger'>{errorUpdate}</Message>}
       {isSuccessAdd && (
-        <Message variant='success'>
-          Laboratory has been Created successfully.
-        </Message>
+        <Message variant='success'>Test has been Created successfully.</Message>
       )}
       {isErrorAdd && <Message variant='danger'>{errorAdd}</Message>}
+      {isSuccessDelete && (
+        <Message variant='success'>Test has been deleted successfully.</Message>
+      )}
+      {isErrorDelete && <Message variant='danger'>{errorDelete}</Message>}
 
       <div
         className='modal fade'
-        id='editLaboratoryModal'
+        id='editTestModal'
         data-bs-backdrop='static'
         data-bs-keyboard='false'
         tabIndex='-1'
-        aria-labelledby='editLaboratoryModalLabel'
+        aria-labelledby='editTestModalLabel'
         aria-hidden='true'
       >
-        <div className='modal-dialog modal-lg'>
+        <div className='modal-dialog'>
           <div className='modal-content modal-background'>
             <div className='modal-header'>
-              <h3 className='modal-title ' id='editLaboratoryModalLabel'>
-                Laboratory Entry Result
+              <h3 className='modal-title ' id='editTestModalLabel'>
+                {edit ? 'Edit Test' : 'Add Test'}
               </h3>
               <button
                 type='button'
@@ -115,14 +157,20 @@ const Laboratory = () => {
                 <Message variant='danger'>{error}</Message>
               ) : (
                 <form onSubmit={handleSubmit(submitHandler)}>
+                  {inputText({ register, label: 'Name', errors, name: 'name' })}
+                  {inputNumber({
+                    register,
+                    label: 'Rate',
+                    errors,
+                    name: 'rate',
+                  })}
                   <div className='row'>
-                    <div className='col-12'>
-                      {inputMultipleCheckBox({
+                    <div className='col'>
+                      {inputCheckBox({
                         register,
                         errors,
-                        label: 'Lab Tests',
-                        name: 'test',
-                        data: selected && selected.labOrders,
+                        label: 'isActive',
+                        name: 'isActive',
                         isRequired: false,
                       })}
                     </div>
@@ -139,9 +187,9 @@ const Laboratory = () => {
                     <button
                       type='submit'
                       className='btn btn-primary '
-                      disabled={isLoadingAdd}
+                      disabled={isLoadingAdd || isLoadingUpdate}
                     >
-                      {isLoadingAdd ? (
+                      {isLoadingAdd || isLoadingUpdate ? (
                         <span className='spinner-border spinner-border-sm' />
                       ) : (
                         'Submit'
@@ -163,12 +211,12 @@ const Laboratory = () => {
             right: '20px',
           }}
           data-bs-toggle='modal'
-          data-bs-target='#editLaboratoryModal'
+          data-bs-target='#editTestModal'
         >
           <FaPlus className='mb-1' />
         </button>
 
-        <CSVLink data={data ? data : []} filename='laboratory.csv'>
+        <CSVLink data={data ? data : []} filename='test.csv'>
           <button
             className='btn btn-success position-fixed rounded-3 animate__bounceIn'
             style={{
@@ -183,22 +231,7 @@ const Laboratory = () => {
 
       <div className='row mt-2'>
         <div className='col-md-4 col-6 me-auto'>
-          <h3 className='fw-light font-monospace'>Laboratory</h3>
-        </div>
-
-        <div className='col-md-4 col-12 ms-auto'>
-          <form onSubmit={(e) => searchHandler(e)}>
-            <input
-              type='text'
-              className='form-control py-2'
-              placeholder='Search by Passport'
-              name='search'
-              value={search}
-              onChange={(e) => setSearch(e.target.value.toUpperCase())}
-              autoFocus
-              required
-            />
-          </form>
+          <h3 className='fw-light font-monospace'>Tests</h3>
         </div>
       </div>
 
@@ -218,45 +251,52 @@ const Laboratory = () => {
         <>
           <div className='table-responsive '>
             <table className='table table-sm hover bordered table-striped caption-top '>
-              <caption>
-                {!isLoading && data && data.length} records were found
-              </caption>
+              <caption>{data && data.length} records were found</caption>
               <thead>
                 <tr>
-                  <th>Patient ID</th>
-                  <th>P. Name</th>
-                  <th>Mobile</th>
-                  <th>Passport</th>
-                  <th>Request Date</th>
-                  <th>Lab Status</th>
+                  <th>Name</th>
+                  <th>Rate</th>
+                  <th>Active</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {data &&
-                  data.map((laboratory) => (
-                    <tr key={laboratory._id}>
-                      <td>{laboratory.patient.patientId}</td>
-                      <td>{laboratory.patient.name}</td>
-                      <td>{laboratory.patient.mobile}</td>
-                      <td>{laboratory.patient.passport}</td>
-                      <td>{moment(laboratory.createdAt).format('lll')}</td>
+                  data.map((test) => (
+                    <tr key={test._id}>
+                      <td>{toUpper(test.name)}</td>
+                      <td>${test.rate && test.rate.toFixed(2)}</td>
                       <td>
-                        {laboratory.isExamined ? (
+                        {test.isActive ? (
                           <FaCheckCircle className='text-success mb-1' />
                         ) : (
                           <FaTimesCircle className='text-danger mb-1' />
                         )}
                       </td>
 
-                      <td className='btn-laboratory'>
+                      <td className='btn-test'>
                         <button
                           className='btn btn-primary btn-sm rounded-pill '
-                          onClick={() => setSelected(laboratory)}
+                          onClick={() => editHandler(test)}
                           data-bs-toggle='modal'
-                          data-bs-target='#editLaboratoryModal'
+                          data-bs-target='#editTestModal'
                         >
-                          <FaMicroscope />
+                          <FaPenAlt />
+                        </button>
+
+                        <button
+                          className='btn btn-danger btn-sm rounded-pill ms-1'
+                          onClick={() => deleteHandler(test._id)}
+                          disabled={isLoadingDelete}
+                        >
+                          {isLoadingDelete ? (
+                            <span className='spinner-border spinner-border-sm' />
+                          ) : (
+                            <span>
+                              {' '}
+                              <FaTrash />
+                            </span>
+                          )}
                         </button>
                       </td>
                     </tr>
@@ -270,6 +310,6 @@ const Laboratory = () => {
   )
 }
 
-export default dynamic(() => Promise.resolve(withAuth(Laboratory)), {
+export default dynamic(() => Promise.resolve(withAuth(Test)), {
   ssr: false,
 })

@@ -24,6 +24,7 @@ handler.get(async (req, res) => {
     .lean()
     .limit(pageSize)
     .sort({ createdAt: -1 })
+    .populate('labOrders')
     .populate('patient', [
       'patientId',
       'name',
@@ -52,7 +53,7 @@ handler.post(async (req, res) => {
   await dbConnect()
   const { isNew } = req.body
   const { passportNumber } = req.body
-  const { isCovid, isPcr } = req.body
+  const { test } = req.body
   const { address, dateOfBirth, email, gender, mobile, name, passport } =
     req.body
   const createdBy = req.user.id
@@ -80,12 +81,9 @@ handler.post(async (req, res) => {
       createdBy,
     })
     if (create) {
-      let labOrders = []
-      isCovid && labOrders.push('COVID-19')
-      isPcr && labOrders.push('PCR SARS-Cov-2')
       await LabOrder.create({
         patient: create._id,
-        labOrders,
+        labOrders: test,
         isExamined: false,
         createdBy,
       })
@@ -108,12 +106,9 @@ handler.post(async (req, res) => {
           'Previous Lab result is not examined. Please update the last lab request'
         )
 
-    let labOrders = []
-    isCovid && labOrders.push('COVID-19')
-    isPcr && labOrders.push('PCR SARS-Cov-2')
     await LabOrder.create({
       patient: patientObj._id,
-      labOrders,
+      labOrders: test,
       isExamined: false,
       createdBy,
     })

@@ -4,6 +4,7 @@ import LabOrder from '../../../models/LabOrder'
 import LabResult from '../../../models/LabResult'
 import Patient from '../../../models/Patient'
 import { isAuth } from '../../../utils/auth'
+import Test from '../../../models/Test'
 
 const handler = nc()
 handler.use(isAuth)
@@ -17,6 +18,7 @@ handler.post(async (req, res) => {
     const order = await LabOrder.find({ patient: patient._id })
       .lean()
       .sort({ createdAt: -1 })
+      .populate('labOrders')
       .populate('patient', [
         'patientId',
         'name',
@@ -38,28 +40,27 @@ handler.post(async (req, res) => {
 handler.put(async (req, res) => {
   await dbConnect()
   const { newData, oldData } = req.body
+
   const createdBy = req.user.id
 
   const result = await LabResult.findOne({ labOrder: oldData._id })
   const order = await LabOrder.findById(oldData._id)
   if (result && order) {
-    order.isExamined = true
-    // await order.save()
+    const pos = newData.test ? newData.test : []
 
-    let labOrders = []
-
-    if (oldData.labOrders.includes('COVID-19')) {
-      newData.isCovid
-        ? labOrders.push({ isCovid: 'positive' })
-        : labOrders.push({ isCovid: 'negative' })
-    }
-    if (oldData.labOrders.includes('PCR SARS-Cov-2')) {
-      newData.isPcr
-        ? labOrders.push({ isPcr: 'positive' })
-        : labOrders.push({ isPcr: 'negative' })
+    let negative = oldData.labOrders.filter(
+      (old) => !pos.includes(old._id) && old.name
+    )
+    let positive = []
+    for (let i = 0; i < pos.length; i++) {
+      const element = await Test.findById(pos[i])
+      positive.push(element)
     }
 
-    result.labOrders = labOrders
+    const positiveArray = positive.map((n) => ({ [n.name]: 'positive' }))
+    const negativeArray = negative.map((n) => ({ [n.name]: 'negative' }))
+
+    result.labOrders = [...positiveArray, ...negativeArray]
     order.isExamined = true
     await order.save()
     await result.save()
@@ -68,22 +69,23 @@ handler.put(async (req, res) => {
   if (!result && order) {
     order.isExamined = true
 
-    let labOrders = []
+    const pos = newData.test ? newData.test : []
 
-    if (oldData.labOrders.includes('COVID-19')) {
-      newData.isCovid
-        ? labOrders.push({ isCovid: 'positive' })
-        : labOrders.push({ isCovid: 'negative' })
+    let negative = oldData.labOrders.filter(
+      (old) => !pos.includes(old._id) && old.name
+    )
+    let positive = []
+    for (let i = 0; i < pos.length; i++) {
+      const element = await Test.findById(pos[i])
+      positive.push(element)
     }
-    if (oldData.labOrders.includes('PCR SARS-Cov-2')) {
-      newData.isPcr
-        ? labOrders.push({ isPcr: 'positive' })
-        : labOrders.push({ isPcr: 'negative' })
-    }
+
+    const positiveArray = positive.map((n) => ({ [n.name]: 'positive' }))
+    const negativeArray = negative.map((n) => ({ [n.name]: 'negative' }))
 
     await order.save()
     await LabResult.create({
-      labOrders,
+      labOrders: [...positiveArray, ...negativeArray],
       labOrder: order._id,
       patient: order.patient,
       createdBy,

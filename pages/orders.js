@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa'
 
 import useOrders from '../api/orders'
+import useTests from '../api/tests'
 import usePatients from '../api/patients'
 
 import { CSVLink } from 'react-csv'
@@ -25,6 +26,7 @@ import {
   inputCheckBox,
   inputDate,
   inputEmail,
+  inputMultipleCheckBox,
   inputNumber,
   inputText,
   staticInputSelect,
@@ -36,6 +38,7 @@ const Order = () => {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const { getOrders, addOrder, deleteOrder } = useOrders(page)
+  const { getTests } = useTests()
 
   const { getPatients } = usePatients()
   const {
@@ -61,6 +64,7 @@ const Order = () => {
 
   const { data, isLoading, isError, error } = getOrders
   const { data: patientData } = getPatients
+  const { data: testData } = getTests
 
   const {
     isLoading: isLoadingDelete,
@@ -93,9 +97,8 @@ const Order = () => {
 
   const submitHandler = async (data) => {
     const existed = {
-      isCovid: data.isCovid,
+      test: data.test,
       isNew: data.isNew,
-      isPcr: data.isPcr,
       passportNumber: data.passportNumber,
     }
     const newPatient = {
@@ -103,9 +106,8 @@ const Order = () => {
       dateOfBirth: data.dateOfBirth,
       email: data.email,
       gender: data.gender,
-      isCovid: data.isCovid,
+      test: data.test,
       isNew: data.isNew,
-      isPcr: data.isPcr,
       mobile: data.mobile,
       name: data.name,
       passport: data.passport,
@@ -122,6 +124,13 @@ const Order = () => {
           d.patient.email.toLowerCase().includes(search.trim())
         : d
     )
+
+  const rate =
+    watch().test &&
+    watch().test.map(
+      (t) => testData && testData.find((data) => data._id === t && data.rate)
+    )
+  const totalRate = rate && rate.reduce((acc, curr) => acc + curr.rate, 0)
 
   return (
     <>
@@ -272,26 +281,21 @@ const Order = () => {
 
                     <hr />
                     <div className='col-12'>
-                      {inputCheckBox({
+                      {inputMultipleCheckBox({
                         register,
                         errors,
-                        label: 'COVID-19',
-                        name: 'isCovid',
-                        isRequired: false,
-                      })}
-                    </div>
-                    <div className='col-12'>
-                      {inputCheckBox({
-                        register,
-                        errors,
-                        label: 'PCR SARS-Cov-2',
-                        name: 'isPcr',
+                        label: 'Lab Tests',
+                        name: 'test',
+                        data: testData && testData.filter((t) => t.isActive),
                         isRequired: false,
                       })}
                     </div>
                   </div>
 
                   <div className='modal-footer'>
+                    <button type='button' className='btn btn-light shadow'>
+                      ${totalRate ? totalRate.toFixed(2) : 0}
+                    </button>
                     <button
                       type='button'
                       className='btn btn-secondary '
@@ -393,7 +397,8 @@ const Order = () => {
                   <th>Mobile</th>
                   <th>Passport</th>
                   <th>Email</th>
-                  <th>Lab Status</th>
+                  <th>Rate</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -406,6 +411,16 @@ const Order = () => {
                       <td>{order.patient.mobile}</td>
                       <td>{order.patient.passport}</td>
                       <td>{order.patient.email}</td>
+                      <td>
+                        $
+                        {order.labOrders &&
+                          order.labOrders.reduce(
+                            (acc, curr) => acc + curr.rate,
+                            0
+                          )}
+                        .00
+                      </td>
+
                       <td>
                         {order.isExamined ? (
                           <FaCheckCircle className='text-success mb-1' />

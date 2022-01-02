@@ -155,15 +155,13 @@ const Downloads = () => {
               {data &&
                 data.labOrders.map((test, i) => (
                   <tr key={i}>
-                    <td>{test.isPcr && 'PCR SARS-Cov-2'}</td>
-                    <td>{test.isPcr && test.isPcr}</td>
-                  </tr>
-                ))}
-              {data &&
-                data.labOrders.map((test, i) => (
-                  <tr key={i}>
-                    <td>{test.isCovid && 'COVID-19'}</td>
-                    <td>{test.isCovid && test.isCovid}</td>
+                    <td>
+                      {Object.keys(test)}
+                      {Object.values(test) == 'positive' && (
+                        <span className='text-danger'>!</span>
+                      )}
+                    </td>
+                    <td>{Object.values(test)}</td>
                   </tr>
                 ))}
             </tbody>
