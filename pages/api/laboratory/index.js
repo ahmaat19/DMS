@@ -18,7 +18,7 @@ handler.post(async (req, res) => {
     const order = await LabOrder.find({ patient: patient._id })
       .lean()
       .sort({ createdAt: -1 })
-      .populate('labOrders')
+      .populate('labOrders.test')
       .populate('patient', [
         'patientId',
         'name',

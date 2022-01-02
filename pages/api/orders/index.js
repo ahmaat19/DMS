@@ -24,7 +24,7 @@ handler.get(async (req, res) => {
     .lean()
     .limit(pageSize)
     .sort({ createdAt: -1 })
-    .populate('labOrders')
+    .populate('labOrders.test')
     .populate('patient', [
       'patientId',
       'name',

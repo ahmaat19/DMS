@@ -10,7 +10,13 @@ const labOrderScheme = mongoose.Schema(
       ref: Patient,
       required: true,
     },
-    labOrders: [{ type: [mongoose.Schema.Types.ObjectId], ref: Test }],
+    labOrders: [
+      {
+        test: { type: [mongoose.Schema.Types.ObjectId], ref: Test },
+        name: { type: String, required: true },
+        rate: { type: Number, default: 0 },
+      },
+    ],
     isExamined: { type: Boolean, default: false },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
