@@ -17,7 +17,7 @@ import useLaboratories from '../api/laboratories'
 import { CSVLink } from 'react-csv'
 
 import { useForm } from 'react-hook-form'
-import { inputCheckBox, inputMultipleCheckBox } from '../utils/dynamicForm'
+import { inputMultipleCheckBoxUpdated } from '../utils/dynamicForm'
 import moment from 'moment'
 
 const Laboratory = () => {
@@ -117,12 +117,13 @@ const Laboratory = () => {
                 <form onSubmit={handleSubmit(submitHandler)}>
                   <div className='row'>
                     <div className='col-12'>
-                      {inputMultipleCheckBox({
+                      {inputMultipleCheckBoxUpdated({
                         register,
                         errors,
                         label: 'Lab Tests',
                         name: 'test',
-                        data: selected && selected.labOrders,
+                        data:
+                          selected && selected.labOrders && selected.labOrders,
                         isRequired: false,
                       })}
                     </div>

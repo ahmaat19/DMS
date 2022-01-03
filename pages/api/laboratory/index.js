@@ -48,9 +48,11 @@ handler.put(async (req, res) => {
   if (result && order) {
     const pos = newData.test ? newData.test : []
 
-    let negative = oldData.labOrders.filter(
-      (old) => !pos.includes(old._id) && old.name
+    let neg = oldData.labOrders.map(
+      (old) => !pos.includes(old.test._id) && old.test
     )
+    const negative = neg.filter((n) => n && n)
+
     let positive = []
     for (let i = 0; i < pos.length; i++) {
       const element = await Test.findById(pos[i])
@@ -71,9 +73,11 @@ handler.put(async (req, res) => {
 
     const pos = newData.test ? newData.test : []
 
-    let negative = oldData.labOrders.filter(
-      (old) => !pos.includes(old._id) && old.name
+    let neg = oldData.labOrders.map(
+      (old) => !pos.includes(old.test._id) && old.test
     )
+    const negative = neg.filter((n) => n && n)
+
     let positive = []
     for (let i = 0; i < pos.length; i++) {
       const element = await Test.findById(pos[i])

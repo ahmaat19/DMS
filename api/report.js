@@ -14,7 +14,7 @@ export default function useReports(obj) {
   const getDashboardReports = useQuery(
     'reports',
     async () => await dynamicAPI('get', url, {}),
-    { retry: 0, refetchInterval: 10000 }
+    { retry: 0, refetchInterval: 36000 }
   )
 
   return {

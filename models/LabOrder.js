@@ -12,8 +12,7 @@ const labOrderScheme = mongoose.Schema(
     },
     labOrders: [
       {
-        test: { type: [mongoose.Schema.Types.ObjectId], ref: Test },
-        name: { type: String, required: true },
+        test: { type: mongoose.Schema.Types.ObjectId, ref: Test },
         rate: { type: Number, default: 0 },
       },
     ],

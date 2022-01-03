@@ -2,6 +2,7 @@ import nc from 'next-connect'
 import dbConnect from '../../../utils/db'
 import LabOrder from '../../../models/LabOrder'
 import Patient from '../../../models/Patient'
+import Test from '../../../models/Test'
 import { isAuth } from '../../../utils/auth'
 import autoIncrement from '../../../utils/autoIncrement'
 
@@ -81,9 +82,15 @@ handler.post(async (req, res) => {
       createdBy,
     })
     if (create) {
+      let labOrders = []
+      for (let i = 0; i < test.length; i++) {
+        const element = await Test.findById(test[i])
+        labOrders.push(element)
+      }
+
       await LabOrder.create({
         patient: create._id,
-        labOrders: test,
+        labOrders: labOrders.map((lab) => ({ test: lab._id, rate: lab.rate })),
         isExamined: false,
         createdBy,
       })
@@ -105,10 +112,15 @@ handler.post(async (req, res) => {
         .send(
           'Previous Lab result is not examined. Please update the last lab request'
         )
+    let labOrders = []
+    for (let i = 0; i < test.length; i++) {
+      const element = await Test.findById(test[i])
+      labOrders.push(element)
+    }
 
     await LabOrder.create({
       patient: patientObj._id,
-      labOrders: test,
+      labOrders: labOrders.map((lab) => ({ test: lab._id, rate: lab.rate })),
       isExamined: false,
       createdBy,
     })

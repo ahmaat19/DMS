@@ -10,8 +10,6 @@ function Home() {
   const { getDashboardReports } = useReports()
   const { data, isLoading, isError, error } = getDashboardReports
 
-  console.log(data && data)
-
   return (
     <>
       <Head>
@@ -43,7 +41,7 @@ function Home() {
                   <h6 className='text-primary font-monospace fw-bold'>
                     INCOME
                   </h6>
-                  <span>$12,252.00</span>
+                  <span>${data && data.todayIncome}</span>
                 </div>
               </div>
             </div>
@@ -53,9 +51,9 @@ function Home() {
                 <FaUserInjured className='mb-1 mt-2 card-img-top text-primary fs-1' />
                 <div className='card-body text-center'>
                   <h6 className='text-primary font-monospace fw-bold'>
-                    VISITORS
+                    NEW VISITORS
                   </h6>
-                  <span>115</span>
+                  <span>{data && data.todayVisitors}</span>
                 </div>
               </div>
             </div>
@@ -65,9 +63,9 @@ function Home() {
                 <FaMicroscope className='mb-1 mt-2 card-img-top text-primary fs-1' />
                 <div className='card-body text-center'>
                   <h6 className='text-primary font-monospace fw-bold'>
-                    TEST EXAMINED
+                    EXAMINED TESTS
                   </h6>
-                  <span>36</span>
+                  <span>{data && data.todayExaminedTests}</span>
                 </div>
               </div>
             </div>
@@ -77,15 +75,9 @@ function Home() {
                 <FaMicroscope className='mb-1 mt-2 card-img-top text-primary fs-1' />
                 <div className='card-body text-center'>
                   <h6 className='text-primary font-monospace fw-bold'>
-                    GENDER
+                    PENDING TESTS
                   </h6>
-                  <span>
-                    <span className='fw-bold'> 54</span> Female{' '}
-                  </span>
-                  <span>
-                    {' '}
-                    <span className='fw-bold'>73</span> Male
-                  </span>
+                  <span>{data && data.todayPendingTests}</span>
                 </div>
               </div>
             </div>
@@ -93,7 +85,7 @@ function Home() {
 
           <div className='row my-4'>
             <div className='col-12'>
-              <h4 className='fw-light'>Last Week's Report</h4>
+              <h4 className='fw-light'>Complete Report</h4>
             </div>
             <div className='col-lg-3 col-md-4 col-6'>
               <div className='card bg-transparent border-0 shadow'>
@@ -102,7 +94,7 @@ function Home() {
                   <h6 className='text-primary font-monospace fw-bold'>
                     INCOME
                   </h6>
-                  <span>$751,252.00</span>
+                  <span>${data && data.completeIncome}</span>
                 </div>
               </div>
             </div>
@@ -112,9 +104,9 @@ function Home() {
                 <FaUserInjured className='mb-1 mt-2 card-img-top text-primary fs-1' />
                 <div className='card-body text-center'>
                   <h6 className='text-primary font-monospace fw-bold'>
-                    VISITORS
+                    NEW VISITORS
                   </h6>
-                  <span>39,645</span>
+                  <span>{data && data.completeVisitors}</span>
                 </div>
               </div>
             </div>
@@ -124,9 +116,9 @@ function Home() {
                 <FaMicroscope className='mb-1 mt-2 card-img-top text-primary fs-1' />
                 <div className='card-body text-center'>
                   <h6 className='text-primary font-monospace fw-bold'>
-                    TEST EXAMINED
+                    EXAMINED TESTS
                   </h6>
-                  <span>36,125</span>
+                  <span>{data && data.completeExaminedTests}</span>
                 </div>
               </div>
             </div>
@@ -136,15 +128,9 @@ function Home() {
                 <FaMicroscope className='mb-1 mt-2 card-img-top text-primary fs-1' />
                 <div className='card-body text-center'>
                   <h6 className='text-primary font-monospace fw-bold'>
-                    GENDER
+                    PENDING TESTS
                   </h6>
-                  <span>
-                    <span className='fw-bold'> 75,845</span> Female{' '}
-                  </span>
-                  <span>
-                    {' '}
-                    <span className='fw-bold'>368,411</span> Male
-                  </span>
+                  <span>{data && data.completePendingTests}</span>
                 </div>
               </div>
             </div>
