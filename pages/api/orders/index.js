@@ -102,16 +102,26 @@ handler.post(async (req, res) => {
     const patientObj = await Patient.findOne({
       passport: passportNumber.toUpperCase(),
     })
-    const isExamined = await LabOrder.findOne({
-      isExamined: true,
+    const isExamined = await LabOrder.find({
+      isExamined: false,
       patient: patientObj._id,
-    })
-    if (isExamined)
-      return res
-        .status(400)
-        .send(
-          'Previous Lab result is not examined. Please update the last lab request'
-        )
+    }).lean()
+
+    if (isExamined && isExamined.length > 0) {
+      const orders = isExamined.map(
+        (s) => s.labOrders && s.labOrders.map((order) => order)
+      )
+      const mergedOrders = [].concat.apply([], orders)
+
+      const duplicate = mergedOrders.map((order) =>
+        test.includes(order.test.toString())
+      )
+
+      if (duplicate.includes(true)) {
+        return res.status(400).send('Previous requested Lab was not examined.')
+      }
+    }
+
     let labOrders = []
     for (let i = 0; i < test.length; i++) {
       const element = await Test.findById(test[i])

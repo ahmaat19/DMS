@@ -44,9 +44,14 @@ handler.put(async (req, res) => {
   const createdBy = req.user.id
 
   const result = await LabResult.findOne({ labOrder: oldData._id })
+
   const order = await LabOrder.findById(oldData._id)
   if (result && order) {
-    const pos = newData.test ? newData.test : []
+    const pos = newData.test
+      ? Array.isArray(newData.test)
+        ? newData.test
+        : [newData.test]
+      : []
 
     let neg = oldData.labOrders.map(
       (old) => !pos.includes(old.test._id) && old.test
@@ -71,13 +76,18 @@ handler.put(async (req, res) => {
   if (!result && order) {
     order.isExamined = true
 
-    const pos = newData.test ? newData.test : []
+    const pos = newData.test
+      ? Array.isArray(newData.test)
+        ? newData.test
+        : [newData.test]
+      : []
 
     let neg = oldData.labOrders.map(
       (old) => !pos.includes(old.test._id) && old.test
     )
-    const negative = neg.filter((n) => n && n)
 
+    const negative = neg.filter((n) => n && n)
+    console.log(negative)
     let positive = []
     for (let i = 0; i < pos.length; i++) {
       const element = await Test.findById(pos[i])
