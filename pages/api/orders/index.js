@@ -11,12 +11,21 @@ handler.use(isAuth)
 handler.get(async (req, res) => {
   await dbConnect()
 
-  let query = LabOrder.find()
+  const passport =
+    req.query && req.query.search && req.query.search.toUpperCase()
+
+  const patients = await Patient.findOne({ passport })
+
+  let query = LabOrder.find(
+    passport && patients ? { patient: patients._id } : {}
+  )
+  const total = await LabOrder.countDocuments(
+    passport && patients ? { patient: patients._id } : {}
+  )
 
   const page = parseInt(req.query.page) || 1
   const pageSize = parseInt(req.query.limit) || 50
   const skip = (page - 1) * pageSize
-  const total = await LabOrder.countDocuments()
 
   const pages = Math.ceil(total / pageSize)
 

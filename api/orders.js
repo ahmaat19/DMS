@@ -3,13 +3,14 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 
 const url = '/api/orders'
 
-export default function useOrders(page) {
+export default function useOrders(page, search) {
   const queryClient = useQueryClient()
 
   // get all orders
   const getOrders = useQuery(
     'orders',
-    async () => await dynamicAPI('get', `${url}?page=${page}`, {}),
+    async () =>
+      await dynamicAPI('get', `${url}?page=${page}&&search=${search}`, {}),
     { retry: 0 }
   )
 

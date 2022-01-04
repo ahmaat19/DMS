@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import Head from 'next/head'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
@@ -15,17 +15,31 @@ import Message from '../../components/Message'
 import Loader from 'react-loader-spinner'
 import moment from 'moment'
 
+import QRCode from 'qrcode'
+
 const Downloads = () => {
   const router = useRouter()
   const { id } = router.query
   const { getReports } = useReports(id)
   const { data, isLoading, isError, error } = getReports
+  const [qr, setQr] = useState('/qrcode.jpg')
 
   const componentRef = useRef()
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
     documentTitle: 'Lab Result Report',
   })
+
+  const generateQR = async (text) => {
+    try {
+      // console.log(await QRCode.toDataURL(text))
+      setQr(await QRCode.toDataURL(text))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  generateQR(`http://localhost:3000${router.asPath}`)
 
   return (
     <>
@@ -198,7 +212,7 @@ const Downloads = () => {
                   className='img-fluid ms-auto'
                 />
                 <Image
-                  src='/qrcode.jpg'
+                  src={qr && qr}
                   width={80}
                   height={80}
                   alt='logo'

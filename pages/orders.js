@@ -37,7 +37,7 @@ import Pagination from '../components/Pagination'
 const Order = () => {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const { getOrders, addOrder, deleteOrder } = useOrders(page)
+  const { getOrders, addOrder, deleteOrder } = useOrders(page, search)
   const { getTests } = useTests()
 
   const { getPatients } = usePatients()
@@ -61,6 +61,17 @@ const Order = () => {
     }
     refetch()
   }, [page, queryClient])
+
+  const searchHandler = (e) => {
+    e.preventDefault()
+
+    const refetch = async () => {
+      await queryClient.prefetchQuery('orders')
+    }
+    if (search) {
+      refetch()
+    }
+  }
 
   const { data, isLoading, isError, error } = getOrders
   const { data: patientData } = getPatients
@@ -115,15 +126,6 @@ const Order = () => {
 
     !data.isNew ? addMutateAsync(existed) : addMutateAsync(newPatient)
   }
-
-  const filterOrder =
-    data &&
-    data.data.filter((d) =>
-      search !== ''
-        ? d.patient.passport.toLowerCase().includes(search.trim()) ||
-          d.patient.email.toLowerCase().includes(search.trim())
-        : d
-    )
 
   const rate =
     watch().test &&
@@ -358,16 +360,20 @@ const Order = () => {
         </div>
 
         <div className='col-md-4 col-12 m-auto'>
-          <input
-            type='text'
-            className='form-control py-2'
-            placeholder='Search by Passport or Email'
-            name='search'
-            value={search}
-            onChange={(e) => setSearch(e.target.value.toLowerCase())}
-            autoFocus
-            required
-          />
+          <form onSubmit={(e) => searchHandler(e)}>
+            <input
+              type='text'
+              className='form-control py-2'
+              placeholder='Search by Passport or Email'
+              name='search'
+              value={search}
+              onChange={(e) => (
+                setSearch(e.target.value.toUpperCase()), setPage(1)
+              )}
+              autoFocus
+              required
+            />
+          </form>
         </div>
       </div>
 
@@ -404,7 +410,7 @@ const Order = () => {
               </thead>
               <tbody>
                 {data &&
-                  filterOrder.map((order) => (
+                  data.data.map((order) => (
                     <tr key={order._id}>
                       <td>{order.patient.patientId}</td>
                       <td>{order.patient.name}</td>
